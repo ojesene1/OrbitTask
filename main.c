@@ -1,94 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-typedef struct Task{
-    char *name;
-    int complete;
-    int task_id;
-    struct Task *next;
-} Task;
-
-int addTask(Task **tail, char *task_name, int task_id){
-    Task *newTask = malloc(sizeof(Task));
-    if(newTask == NULL || task_name == NULL){
-        printf("Add Task Failure.\n");
-        return 0;
-    }
-    newTask->name = strdup(task_name);
-    newTask->complete = 0;
-    newTask->task_id = task_id;
-    newTask->next = newTask ;
-
-    if (*tail == NULL){
-        *tail = newTask;
-        return 1;
-    }
-    //Using circular nexted list
-    Task *ptr = *tail;
-    do{
-        ptr = ptr->next;
-    } while(ptr->next != *tail);
-
-    ptr->next = newTask;
-    newTask->next = *tail;
-    return 1;
-
-}
-
-int deleteTask(Task **tail, int del_task_id){
-    if(*tail == NULL){
-        printf("There are no list items to delete.\n");
-        return 0;
-    }
-    Task *temp = (*tail)->next;
-    Task *prev = *tail;
-    do{
-        if(temp->task_id == del_task_id){
-            prev->next = temp->next;
-            if(temp == *tail){
-                free(*tail);
-                *tail = prev->next;
-                return 1;
-            }
-            free(temp);
-            temp = NULL;
-            return 1;
-        }
-        prev = prev->next;
-        temp = temp->next;
-    }while(temp != (*tail)->next);
-    return 0;
-}
-
-int completeTask(Task *tail, int complete_task_id){
-    if(tail == NULL){
-        printf("There are no list items to complete.\n");
-        return 0;
-    }
-    Task *temp = tail->next;
-    do{
-        if(temp->task_id == complete_task_id){
-            temp->complete = 1;
-            return 1;
-        }
-        temp = temp->next;
-    }while(temp != tail->next);
-    return 0;
-}
-
-int printList(Task *tail){
-    if(tail == NULL){
-        printf("To-Do List is EMPTY!\nGO FIND SOMETHING TO DO!!\n");
-        return 0;
-    }
-    Task *temp = tail;
-    do{
-        printf("Task %d: %s\n", temp->task_id, temp->name);
-        temp = temp->next;
-    } while(temp != tail);
-    return 1;
-}
+#include "tasks.c"
 
 int main(){
     int choice;
@@ -97,15 +10,16 @@ int main(){
     Task *tail = NULL;
     printf("Make your very own To-Do List!\n");
     while(1){
-        printList(tail);
         printf("\n1. Add a Task to the List!");
         printf("\n2. Mark a Task as Complete!");
         printf("\n3. Remove a Task from the List.");
         printf("\n4. Print the Task List.");
         printf("\n5. Quit Task Manager.");
+        printf("\n6. Empty the List.");
         printf("\nChoose your action: ");
-        scanf("%d", &choice);
-        getchar();  // consume the leftover '\n'
+        char buff1[10];
+        fgets(buff1, sizeof(buff1), stdin);
+        choice = atoi(buff1);
 
         switch(choice){
             case 1:
@@ -121,7 +35,9 @@ int main(){
                 break;
             case 2:
                 printf("\nType the id of the completed task: ");
-                scanf("%d", &comp_task_id);
+                char buff2[10];
+                fgets(buff2, sizeof(buff2), stdin);
+                comp_task_id = atoi(buff2);    //mixing scanf will leave the newline for the fgets next call - leading to unexpected behaviour
                 if(completeTask(tail, comp_task_id)){
                     printf("\nSuccessfully completed task %d!", comp_task_id);
                 }
@@ -131,7 +47,9 @@ int main(){
                 break;
             case 3:
                 printf("\nType the id of the task you wish to Remove: ");
-                scanf("%d", &comp_task_id);
+                char buff3[10];
+                fgets(buff3, sizeof(buff3), stdin);
+                comp_task_id = atoi(buff3);
                 if(deleteTask(&tail, comp_task_id)){
                     printf("\nSuccessfully deleted task %d!", comp_task_id);
                 }
@@ -140,10 +58,14 @@ int main(){
                 }
                 break;
             case 4:
-                printf("The task list is:");
+                printList(tail);
                 break;
             case 5: 
                 exit(1);
+                break;
+            case 6:
+                freeList(tail);
+                printf("List is EMPTY!");
                 break;
             default:
                 printf("Make a choice or Quit!");
