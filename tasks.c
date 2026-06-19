@@ -2,14 +2,21 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef enum {
+    LOW = 1,
+    MEDIUM = 2,
+    HIGH = 3
+} Priority; 
+
 typedef struct Task{
     char *name;
     int complete;
+    int priority;
     int task_id;
     struct Task *next;
 } Task;
 
-int addTask(Task **tail, char *task_name, int task_id){
+int addTask(Task **tail, char *task_name, int task_id, int priority){
     Task *newTask = malloc(sizeof(Task));
     if(newTask == NULL || task_name == NULL){
         printf("Add Task Failure.\n");
@@ -17,6 +24,7 @@ int addTask(Task **tail, char *task_name, int task_id){
     }
     newTask->name = strdup(task_name);
     newTask->complete = 0;
+    newTask->priority = priority;
     newTask->task_id = task_id;
     newTask->next = newTask ;
 
@@ -72,7 +80,7 @@ int completeTask(Task *tail, int complete_task_id){
     Task *temp = tail->next;
     do{
         if(temp->task_id == complete_task_id){
-            temp->complete = 1;
+            temp->complete = !temp->complete;
             return 1;
         }
         temp = temp->next;
@@ -85,26 +93,54 @@ int printList(Task *tail){
         printf("To-Do List is EMPTY!\nGO FIND SOMETHING TO DO!!\n");
         return 0;
     }
+
     Task *temp = tail->next;
+
+    printf("\n== HIGH PRIORITY TASKS ==");
+    printf("\n------------------------------");
     do{
-        printf("\n[%d] %s [%s]", temp->task_id, temp->name, (temp->complete ? "DONE" : " ")); //Now uses conditional operator with the complete member
+        if(temp->priority == HIGH){ //PRINTING THE HIGH PRIO TASKS
+            printf("\n[%d] %s [%s]", temp->task_id, temp->name, (temp->complete ? "DONE" : " ")); 
+        }
+        temp = temp->next;
+    } while(temp != tail->next);
+
+    printf("\n\n== MEDIUM PRIORITY TASKS ==");
+    printf("\n------------------------------");
+    do{
+        if(temp->priority == MEDIUM){ //PRINTING THE MED PRIO TASKS
+            printf("\n[%d] %s [%s]", temp->task_id, temp->name, (temp->complete ? "DONE" : " ")); 
+        }
+        temp = temp->next;
+    } while(temp != tail->next);
+
+    printf("\n\n== LOW PRIORITY TASKS ==");
+    printf("\n------------------------------");
+    do{
+        if(temp->priority == LOW){ //PRINTING THE LOW PRIO TASKS
+            printf("\n[%d] %s [%s]", temp->task_id, temp->name, (temp->complete ? "DONE" : " ")); 
+        }
         temp = temp->next;
     } while(temp != tail->next);
     return 1;
 }
 
-void freeList(Task *tail){
-    if(tail == NULL){
+void freeList(Task **tail){
+    if(*tail == NULL){
         printf("List already Empty Gang...\n");
-        return;
     }
-    Task *cur;
-    Task *prev = tail->next;
+    else{
+        Task *cur;
+        Task *prev = (*tail)->next;
+        Task *head = (*tail)->next; //holds the head ptr so we make sure this address is cleared.
 
-    do{
-        cur = prev->next;
-        free(prev->name);
-        free(prev);
-        prev = cur;
-    } while(cur != tail->next);
+        do{
+            cur = prev->next;
+            free(prev->name);
+            free(prev);
+            prev = cur;
+        } while(cur != head);
+
+        *tail = NULL;
+    }
 }

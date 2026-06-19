@@ -6,16 +6,18 @@
 int main(){
     int choice;
     char name[100];
-    int task_id = 1, comp_task_id;
+    int task_id = 1, comp_task_id, task_prio;
     Task *tail = NULL;
-    printf("Make your very own To-Do List!\n");
+
+    printf("Welcome to To-Do List Manager!\n");
     while(1){
         printf("\n1. Add a Task to the List!");
         printf("\n2. Mark a Task as Complete!");
         printf("\n3. Remove a Task from the List.");
         printf("\n4. Print the Task List.");
-        printf("\n5. Quit Task Manager.");
-        printf("\n6. Empty the List.");
+        printf("\n5. Empty the List.");
+        printf("\n6. Quit Task Manager.");
+        
         printf("\nChoose your action: ");
         char buff1[10];
         fgets(buff1, sizeof(buff1), stdin);
@@ -26,7 +28,15 @@ int main(){
                 printf("Type the name of the Task: ");
                 fgets(name, sizeof(name), stdin);
                 name[strcspn(name, "\n")] = '\0';   //remove the newline from the input
-                if (addTask(&tail, name, task_id)){
+
+                printf("What is the Priority of this Task (1 = LOW, 2 = MEDIUM, 3 = HIGH): ");
+                char buff2[10];
+                fgets(buff2, sizeof(buff2), stdin);
+                task_prio = atoi(buff2);
+                if(task_prio != LOW && task_prio != MEDIUM && task_prio != HIGH){
+                    printf("Wrong Priority input. Try again.");
+                }
+                else if (addTask(&tail, name, task_id, task_prio)){
                     printf("\nSuccessfully added task %d: %s!", task_id++, name);
                 }
                 else{
@@ -35,9 +45,9 @@ int main(){
                 break;
             case 2:
                 printf("\nType the id of the completed task: ");
-                char buff2[10];
-                fgets(buff2, sizeof(buff2), stdin);
-                comp_task_id = atoi(buff2);    //mixing scanf will leave the newline for the fgets next call - leading to unexpected behaviour
+                char buff3[10];
+                fgets(buff3, sizeof(buff3), stdin);
+                comp_task_id = atoi(buff3);    //mixing scanf will leave the newline for the fgets next call - leading to unexpected behaviour
                 if(completeTask(tail, comp_task_id)){
                     printf("\nSuccessfully completed task %d!", comp_task_id);
                 }
@@ -47,9 +57,9 @@ int main(){
                 break;
             case 3:
                 printf("\nType the id of the task you wish to Remove: ");
-                char buff3[10];
-                fgets(buff3, sizeof(buff3), stdin);
-                comp_task_id = atoi(buff3);
+                char buff4[10];
+                fgets(buff4, sizeof(buff4), stdin);
+                comp_task_id = atoi(buff4);
                 if(deleteTask(&tail, comp_task_id)){
                     printf("\nSuccessfully deleted task %d!", comp_task_id);
                 }
@@ -60,12 +70,14 @@ int main(){
             case 4:
                 printList(tail);
                 break;
-            case 5: 
+            case 6: 
+                printf("Thanks for using us!\n");
                 exit(1);
                 break;
-            case 6:
-                freeList(tail);
+            case 5:
+                freeList(&tail);
                 printf("List is EMPTY!");
+                task_id = 1;
                 break;
             default:
                 printf("Make a choice or Quit!");
