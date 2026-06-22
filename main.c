@@ -6,25 +6,29 @@
 int main(){
     char name[100];
     int isDue = 0;
-    int comp_task_id, task_prio;
+    int comp_task_id, task_prio, sort = 1;
     TaskManager manager = {.tail = NULL, .size = 0, .next_id = 1};
 
-    printf("Welcome to To-Do List Manager!\n");
+    printf("Welcome to To-Do List Manager!\n\n");
+    loadTasks(&manager);
     while(1){
-        printf("\n1. Add a Task to the List!");
-        printf("\n2. Mark a Task as Complete!");
-        printf("\n3. Remove a Task from the List.");
-        printf("\n4. Edit a Task.");
-        printf("\n5. Print the Task List.");
-        printf("\n6. Empty the List.");
-        printf("\n7. Search the List.");
-        printf("\n8. Quit Task Manager.");
+        printf("------------TASK MANAGER------------");
+        printf("\n----1. Add a Task to the List!----");
+        printf("\n----2. Toggle the Completion of a Task (Complete/Incomplete)!----");
+        printf("\n----3. Remove a Task from the List.----");
+        printf("\n----4. Edit a Task.----");
+        printf("\n----5. Print the Task List.----");
+        printf("\n----6. Empty the List.----");
+        printf("\n----7. Search the List.----");
+        printf("\n----8. List Settings.----");
+        printf("\n----9. Save and Quit Task Manager.----");
+        printf("\n----10. Quit.----");
         
         printf("\nChoose your action: ");
         char buff1[10];
         fgets(buff1, sizeof(buff1), stdin);
         int choice = atoi(buff1);
-
+        
         switch(choice){
             case 1:
                 printf("Type the name of the Task: ");
@@ -59,7 +63,9 @@ int main(){
                     fgets(buffy, sizeof(buffy), stdin);
                     year = atoi(buffy);
                 }
-                if (addTask(&manager, name, task_prio, day, month, year)){
+                else{ day = 0, month = 0, year = 0;}
+
+                if (addTask(&manager, name, -1, task_prio, day, month, year, 0)){
                     printf("\nSuccessfully added task %d: %s!", manager.next_id-1, name);
                 }
                 else{
@@ -67,12 +73,12 @@ int main(){
                 }
                 break;
             case 2:
-                printf("\nType the id of the completed task: ");
+                printf("\nType the id of the task you wish to complete/incomplete: ");
                 char buff3[10];
                 fgets(buff3, sizeof(buff3), stdin);
                 comp_task_id = atoi(buff3);    //mixing scanf will leave the newline for the fgets next call - leading to unexpected behaviour
                 if(completeTask(&manager, comp_task_id)){
-                    printf("\nSuccessfully completed task %d!", comp_task_id);
+                    printf("\nSuccessfully toggled task completion of Task %d!", comp_task_id);
                 }
                 else{
                     printf("\nInvalid Task id, try again.");
@@ -98,7 +104,7 @@ int main(){
                 editTask(&manager, comp_task_id);
                 break;
             case 5:
-                printList(&manager);
+                printList(&manager, sort);
                 break;
             case 6:
                 freeList(&manager);
@@ -133,11 +139,42 @@ int main(){
                     }
                 }
                 break;
-
-            case 8: 
+            case 8:
+                while(1){
+                    printf("1. Sort by Priority\n2. Sort by Completion Status\nYour Choice: ");
+                    char buffsort[10];
+                    fgets(buffsort, sizeof(buffsort), stdin);
+                    sort = atoi(buffsort);
+                    if(sort != 1 && sort != 2){
+                        printf("Incorrect option. Try again.\n");
+                        continue;
+                    }
+                    break;
+                }
+                break;
+            case 9:
+                saveTasks(&manager);
                 printf("Thanks for using us!\n");
                 exit(1);
                 break;
+            case 10:
+                int quit = 0;
+                while(1){
+                    printf("Are you sure you want to quit without saving?\n(1 = Yes, 2 = No): ");
+                    char buffquitid[10];
+                    fgets(buffquitid, sizeof(buffquitid), stdin);
+                    quit = atoi(buffquitid);
+                    if(quit == 1){
+                        printf("Thanks for using us!\n");
+                        exit(1);
+                    }
+                    else if(quit == 2){
+                        saveTasks(&manager);
+                        printf("Thanks for using us!\n");
+                        exit(1);
+                    }
+                    printf("Wrong input. ");
+                }
             default:
                 printf("Make a choice or Quit!");
                 break;

@@ -14,23 +14,29 @@ typedef struct Task{
     int day, month, year;
 } Task;
 
-
-int addTask(TaskManager *manager, char *task_name, int priority, int day, int month, int year){
+int addTask(TaskManager *manager, char *task_name, int id, int priority, int day, int month, int year, int isComplete){
     Task *newTask = malloc(sizeof(Task));
     if(newTask == NULL || task_name == NULL){
         printf("Add Task Failure.\n");
         return 0;
     }
     newTask->name = strdup(task_name);
-    newTask->complete = 0;
+    newTask->complete = isComplete;
     newTask->priority = priority;
-    newTask->task_id = manager->next_id;
-    manager->next_id++;
-    manager->size++;
+    if(id <= 0){
+        newTask->task_id = manager->next_id;
+        manager->next_id++;
+        manager->size++;
+    }
+    else{ 
+        newTask->task_id = id;
+    }
+    
 
     newTask->day = day;
     newTask->month = month;
-    newTask->year = year; 
+    newTask->year = year;
+
     newTask->next = newTask ;
 
     if (manager->tail == NULL){
@@ -84,6 +90,7 @@ int completeTask(TaskManager *manager, int complete_task_id){
         printf("There are no list items to complete.\n");
         return 0;
     }
+    
     Task *temp = manager->tail->next;
     do{
         if(temp->task_id == complete_task_id){
@@ -92,46 +99,70 @@ int completeTask(TaskManager *manager, int complete_task_id){
         }
         temp = temp->next;
     }while(temp != manager->tail->next);
+
     return 0;
 }
 
-int printList(TaskManager *manager){
+int printList(TaskManager *manager, int sort){
     if(manager->tail == NULL){
         printf("To-Do List is EMPTY!\nGO FIND SOMETHING TO DO!!\n");
         return 0;
     }
 
     Task *temp = manager->tail->next;
+    if(sort == 1){
+        printf("\n== HIGH PRIORITY TASKS ==");
+        printf("\n------------------------------");
+        do{
+            if(temp->priority == HIGH){ //PRINTING THE HIGH PRIO TASKS
+                printf("\n[%d] %s [%s]", temp->task_id, temp->name, (temp->complete ? "DONE" : " "));
+                printf("\nDue: %d/%d/%d", temp->day, temp->month, temp->year);
+            }
+            temp = temp->next;
+        } while(temp != manager->tail->next);
 
-    printf("\n== HIGH PRIORITY TASKS ==");
-    printf("\n------------------------------");
-    do{
-        if(temp->priority == HIGH){ //PRINTING THE HIGH PRIO TASKS
-            printf("\n[%d] %s [%s]", temp->task_id, temp->name, (temp->complete ? "DONE" : " "));
-            printf("\nDue: %d/%d/%d", temp->day, temp->month, temp->year);
-        }
-        temp = temp->next;
-    } while(temp != manager->tail->next);
+        printf("\n\n== MEDIUM PRIORITY TASKS ==");
+        printf("\n------------------------------");
+        do{
+            if(temp->priority == MEDIUM){ //PRINTING THE MED PRIO TASKS
+                printf("\n[%d] %s [%s]", temp->task_id, temp->name, (temp->complete ? "DONE" : " "));
+                printf("\nDue: %d/%d/%d", temp->day, temp->month, temp->year);
+            }
+            temp = temp->next;
+        } while(temp != manager->tail->next);
 
-    printf("\n\n== MEDIUM PRIORITY TASKS ==");
-    printf("\n------------------------------");
-    do{
-        if(temp->priority == MEDIUM){ //PRINTING THE MED PRIO TASKS
-            printf("\n[%d] %s [%s]", temp->task_id, temp->name, (temp->complete ? "DONE" : " "));
-            printf("\nDue: %d/%d/%d", temp->day, temp->month, temp->year);
-        }
-        temp = temp->next;
-    } while(temp != manager->tail->next);
-
-    printf("\n\n== LOW PRIORITY TASKS ==");
-    printf("\n------------------------------");
-    do{
-        if(temp->priority == LOW){ //PRINTING THE LOW PRIO TASKS
-            printf("\n[%d] %s [%s]", temp->task_id, temp->name, (temp->complete ? "DONE" : " "));
-            printf("\nDue: %d/%d/%d", temp->day, temp->month, temp->year);
-        }
-        temp = temp->next;
-    } while(temp != manager->tail->next);
+        printf("\n\n== LOW PRIORITY TASKS ==");
+        printf("\n------------------------------");
+        do{
+            if(temp->priority == LOW){ //PRINTING THE LOW PRIO TASKS
+                printf("\n[%d] %s [%s]", temp->task_id, temp->name, (temp->complete ? "DONE" : " "));
+                printf("\nDue: %d/%d/%d", temp->day, temp->month, temp->year);
+            }
+            temp = temp->next;
+        } while(temp != manager->tail->next);
+    }
+    else if(sort == 2){
+        printf("\n=== COMPLETED TASKS ===");
+        printf("\n------------------------------");
+        do{
+            if(temp->complete){
+                printf("\n[%d] %s", temp->task_id, temp->name);
+                printf("\nDue: %d/%d/%d", temp->day, temp->month, temp->year);
+            }
+            temp = temp->next;
+        } while(temp != manager->tail->next);
+        
+        printf("\n\n=== INCOMPLETE TASKS ===");
+        printf("\n------------------------------");
+        do{
+            if(!temp->complete){
+                printf("\n[%d] %s", temp->task_id, temp->name);
+                printf("\nDue: %d/%d/%d", temp->day, temp->month, temp->year);
+            }
+            temp = temp->next;
+        } while(temp != manager->tail->next);
+    }
+    
     return 1;
 }
 
@@ -152,6 +183,8 @@ void freeList(TaskManager *manager){
         } while(cur != head);
 
         manager->tail = NULL;
+        manager->size = 0;
+        manager->next_id = 1;
     }
 }
 
@@ -282,4 +315,61 @@ void searchTaskById(TaskManager *manager, int task_id){
         temp = temp->next;
     } while(temp != manager->tail->next);
     printf("\nCouldn't find the task you inputted. Try again.");
+}
+
+void saveTasks(TaskManager *manager){
+    if(manager->tail == NULL){
+        printf("No files saved to tasklist.txt.\n");
+        return;
+    }
+
+    FILE *fptr;
+    fptr = fopen("tasklist.txt", "w");
+    if(fptr == NULL){
+        printf("Unable to open tasklist.txt\n");
+        return;
+    }
+
+    Task *temp = manager->tail->next;
+    // Stores in form: size|next_id
+    fprintf(fptr, "%d|%d", manager->size, manager->next_id);
+
+    do{
+        //Stores in form of task_id|task_name|task_priority|task_completion|due_day/due_month/due_year
+        fprintf(fptr, "\n%d|%s|%d|%d|%d/%d/%d", temp->task_id, temp->name, temp->priority, temp->complete, 
+                                                temp->day, temp->month, temp->year);
+        temp = temp->next;
+    } while(temp != manager->tail->next);
+    
+    printf("Saved tasks to tasklist.txt!\n");
+    fclose(fptr);
+}
+
+void loadTasks(TaskManager *manager){
+    FILE *fptr;
+    fptr = fopen("tasklist.txt", "r");
+    if(fptr == NULL){
+        printf("Couldn't read from the tasklist.txt");
+        return;
+    }
+
+    char line[150];
+    if(fgets(line, sizeof(line), fptr)){
+        int size, next_id;
+        if(sscanf(line, "%d|%d", &size, &next_id)){
+            manager->size = size;
+            manager->next_id = next_id;
+        }else { printf("Bad file format. Couldn't load tasks from tasklist.txt."); 
+            return;}    
+        char name[100];
+        int id, priority, isComplete, day, month, year; 
+        while(fgets(line, sizeof(line), fptr)){
+            if(sscanf(line, "%d|%[^|]|%d|%d|%d/%d/%d", &id, name, &priority, &isComplete, &day, &month, &year)){
+                addTask(manager, name, id, priority, day, month, year, isComplete);
+            }else{ return; }
+        }
+        printf("Tasks Loaded from tasklist.txt!\n");
+    }
+
+    fclose(fptr);
 }
