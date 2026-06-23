@@ -110,7 +110,7 @@ int printList(TaskManager *manager, int sort){
     }
 
     Task *temp = manager->tail->next;
-    if(sort == 1){
+    if(sort == 1){ //PRIORITY PRINT
         printf("\n== HIGH PRIORITY TASKS ==");
         printf("\n------------------------------");
         do{
@@ -141,7 +141,7 @@ int printList(TaskManager *manager, int sort){
             temp = temp->next;
         } while(temp != manager->tail->next);
     }
-    else if(sort == 2){
+    else if(sort == 2){ //COMPLETION PRINT
         printf("\n=== COMPLETED TASKS ===");
         printf("\n------------------------------");
         do{
